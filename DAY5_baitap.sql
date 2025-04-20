@@ -87,11 +87,11 @@ FROM Teacher
 GROUP BY teacher_id
 ;
 --- BAI TAP 11
-select user_id, 
-count(follower_id) as followers_count 
-from Followers 
-group by user_id 
-order by user_id;
+SELECT user_id, 
+COUNT(follower_id) AS followers_count 
+FROM Followers 
+GROUP BY user_id 
+ORDER BY user_id;
 --- BAI TAP 12
 SELECT class
 FROM Courses
