@@ -57,21 +57,12 @@ ORDER BY MAX(issued_amount)-MIN(issued_amount) DESC
 --- BAI TAP 8
 SELECT
 manufacturer, 
-COUNT(*) AS drug_count,
-SUM (losses) AS total_loss
-
-FROM( --Subquery 
-SELECT
-manufacturer,
-COUNT(drug), 
-ABS(total_sales-cogs) AS losses
+COUNT(drug) AS drug_count, 
+ABS(SUM(cogs-total_sales)) AS total_loss
 FROM pharmacy_sales
-GROUP BY manufacturer, total_sales-cogs
-HAVING total_sales-cogs<0
-) AS aggregated_data -- Subquery 
-
+WHERE total_sales<cogs
 GROUP BY manufacturer
-ORDER BY SUM (losses) DESC
+ORDER BY total_loss DESC
 ;
 --- BAI TAP 9
 SELECT *
