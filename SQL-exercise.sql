@@ -21,3 +21,19 @@ from(
   having count(title)>1 and count(company_id)>1
   ) as aggregate
 ;
+-- EX3:https://www.hackerrank.com/challenges/weather-observation-station-19/problem?isFullScreen=true
+/*
+ - Carefully read the problem to identify the goal (e.g., retrieve data, calculate a value, filter records): calculate Euclidean Distance: d(p,q)=sqrt(sqr(q1-p1)+sqr(q2-p2))
+   - Identify the key components:
+     Input data: What tables and columns are involved?
+     STATION, LAT_N, LONG_W
+     Output requirements: What should the query return?
+      Euclidean Distance
+     Constraints: Are there filters or conditions?
+    min, max, round
+*/
+select
+round(sqrt(power(min(LAT_N)-max(LAT_N),2)+power(min(LONG_W)-max(LONG_W),2)),4) as euclidean_distance
+from STATION
+-- power(a,x): a lũy thừa x
+-- sqrt: căng bậc 2
