@@ -54,6 +54,16 @@ JOIN Employees AS t2
 ON t1.employee_id = t2.reports_to
 GROUP BY t1.employee_id, t1.name
 ORDER BY t1.employee_id;
+--Cách 2:
+SELECT b.employee_id, b.name,
+COUNT(a.reports_to) AS reports_count,
+ROUND(AVG(a.age)) AS average_age  
+FROM Employees AS a
+JOIN Employees AS b
+ON a.reports_to=b.employee_id
+GROUP BY b.employee_id
+HAVING COUNT(a.reports_to)>=1
+ORDER BY b.employee_id;
 -- Bai tap 6: https://leetcode.com/problems/list-the-products-ordered-in-a-period/?envType=study-plan-v2&envId=top-sql-50
 SELECT  t2.product_name, SUM(t1.unit) AS unit           
 FROM Orders AS t1
@@ -68,26 +78,34 @@ FROM pages AS t1
 LEFT JOIN page_likes AS t2
 ON t1.page_id = t2.page_id
 WHERE t2.page_id IS NULL;
---Mid-course-test:
---Cau 1:
+--Mid-course-test: 
+--Cau 1: DISTINCT
 SELECT DISTINCT replacement_cost
 FROM film
 ORDER BY replacement_cost ASC
 LIMIT 1;
--- Cau 2:
+-- Cau 2: CASE + GROUP BY
 SELECT
 CASE
 WHEN replacement_cost BETWEEN 9.99 AND 19.99 THEN 'low'
 END AS category,
 COUNT(*) AS film_count
 FROM film
-WHERE 
-CASE
-WHEN replacement_cost BETWEEN 9.99 AND 19.99 THEN 'low'
-END IS NOT NULL
 GROUP BY category
 ;
--- Cau 3:
+
+-- Cách 2: 
+SELECT 
+CASE 
+WHEN replacement_cost BETWEEN 9.99 AND 19.99 THEN 'low'
+WHEN replacement_cost  BETWEEN 20.00 AND 24.99 THEN 'medium'
+ELSE 'high'
+END as category,
+count(film_id) AS total
+FROM public.film
+GROUP BY category;
+
+-- Cau 3: JOIN
 SELECT t1.length, t3.name 
 FROM film AS t1
 JOIN film_category AS t2 
@@ -97,7 +115,7 @@ ON t2.category_id = t3.category_id
 WHERE t3.name IN ('Drama', 'Sports')
 ORDER BY t1.length DESC
 LIMIT 1;
--- Cau 4:
+-- Cau 4: JOIN & GROUP BY
 SELECT t3.name,COUNT(t1.film_id) 
 FROM film t1
 JOIN film_category AS t2 
@@ -107,7 +125,7 @@ ON t2.category_id = t3.category_id
 GROUP BY t3.name
 ORDER BY COUNT(t1.film_id) DESC
 LIMIT 1;
--- Cau 5:
+-- Cau 5: JOIN & GROUP BY
 SELECT 
 t1.first_name, 
 t1.last_name, 
@@ -118,13 +136,13 @@ ON t1.actor_id = t2.actor_id
 GROUP BY  t1.first_name, t1.last_name
 ORDER BY film_count DESC
 LIMIT 1;
--- Cau 6:
+-- Cau 6: LEFT JOIN & FILTERING
 SELECT COUNT(*) 
 FROM address AS t1
 LEFT JOIN customer AS t2 
 ON t1.address_id = t2.address_id
 WHERE t2.customer_id IS NULL;
--- Cau 7:
+-- Cau 7: JOIN & GROUP BY
 SELECT t4.city, SUM(t1.amount) 
 FROM payment AS t1
 JOIN customer AS t2 
@@ -136,7 +154,7 @@ ON t3.city_id = t4.city_id
 GROUP BY t4.city
 ORDER BY SUM(t1.amount) DESC
 LIMIT 1;
--- Cau 8:
+-- Cau 8:JOIN & GROUP BY
 SELECT CONCAT(t5.country, ', ', t4.city) AS location, SUM(t1.amount) AS revenue
 FROM payment AS t1
 JOIN customer AS t2 
