@@ -79,12 +79,123 @@ COUNT(*) AS monthly_active_users
 FROM july_users AS a 
 JOIN june_users AS b 
 ON a.user_id=b.user_id;
-
+--Lemur solution:
+SELECT 
+EXTRACT(MONTH FROM curr_month.event_date) AS mth, 
+COUNT(DISTINCT curr_month.user_id) AS monthly_active_users 
+FROM user_actions AS curr_month
+WHERE EXISTS (
+SELECT 1 
+FROM user_actions AS last_month
+WHERE last_month.user_id = curr_month.user_id
+AND EXTRACT(MONTH FROM last_month.event_date) =
+EXTRACT(MONTH FROM curr_month.event_date - interval '1 month')
+)
+  AND EXTRACT(MONTH FROM curr_month.event_date) = 7
+  AND EXTRACT(YEAR FROM curr_month.event_date) = 2022
+GROUP BY EXTRACT(MONTH FROM curr_month.event_date);
 --EX6: https://leetcode.com/problems/monthly-transactions-i/?envType=study-plan-v2&envId=top-sql-50
+SELECT
+a.month,
+a.country,
+a.trans_count,
+a.approved_count,
+a.trans_total_amount,
+a.approved_total_amount
+FROM (
+SELECT
+DATE_FORMAT(trans_date, '%Y-%m') AS month,
+country,
+COUNT(*) AS trans_count,
+COUNT(CASE WHEN state = 'approved' THEN 1 END) AS approved_count,
+SUM(amount) AS trans_total_amount,
+SUM(CASE WHEN state = 'approved' THEN amount ELSE 0 END) AS approved_total_amount
+FROM Transactions
+GROUP BY DATE_FORMAT(trans_date, '%Y-%m'), country
+) AS a;
+
 --EX7: https://leetcode.com/problems/product-sales-analysis-iii/?envType=study-plan-v2&envId=top-sql-50
+
+SELECT product_id, year AS first_year, quantity, price 
+FROM Sales
+WHERE (product_id, year) IN (
+SELECT product_id, MIN(year)
+FROM Sales
+GROUP BY product_id
+);
+
 --EX8: https://leetcode.com/problems/customers-who-bought-all-products/?envType=study-plan-v2&envId=top-sql-50
+SELECT 
+customer_id
+FROM Customer
+GROUP BY customer_id
+HAVING COUNT(DISTINCT product_key) = (SELECT COUNT(*) FROM Product);
+
 --EX9: https://leetcode.com/problems/employees-whose-manager-left-the-company/?envType=study-plan-v2&envId=top-sql-50
+SELECT 
+e.employee_id
+FROM Employees AS e
+WHERE e.manager_id IS NOT NULL
+AND NOT EXISTS (
+SELECT 1
+FROM Employees AS m
+WHERE m.employee_id = e.manager_id
+)
+AND e.salary < 30000
+ORDER BY e.employee_id;
+
 --EX10: https://datalemur.com/questions/duplicate-job-listings
+WITH duplicates AS (
+SELECT
+company_id
+FROM job_listings
+GROUP BY
+company_id, title, description
+HAVING COUNT(*) > 1)
+
+SELECT
+COUNT(DISTINCT company_id) AS duplicate_companies
+FROM duplicates;
+
 --EX11: http://leetcode.com/problems/movie-rating/?envType=study-plan-v2&envId=top-sql-50
+
+(
+SELECT
+u.name AS results
+FROM MovieRating AS mr
+JOIN Users AS u
+ON mr.user_id = u.user_id
+GROUP BY u.name
+ORDER BY COUNT(mr.rating) DESC, u.name
+LIMIT 1
+)
+
+UNION ALL
+(
+SELECT
+m.title AS results
+FROM MovieRating AS mr2
+JOIN Movies AS m
+ON mr2.movie_id = m.movie_id
+WHERE DATE_FORMAT(mr2.created_at, '%Y-%m') = '2020-02'
+GROUP BY m.title
+ORDER BY AVG(mr2.rating) DESC, m.title
+LIMIT 1
+);
+
 --EX12: https://leetcode.com/problems/friend-requests-ii-who-has-the-most-friends/?envType=study-plan-v2&envId=top-sql-50
+WITH AllIds AS (
+SELECT requester_id AS id
+FROM RequestAccepted
+UNION ALL
+SELECT accepter_id
+FROM RequestAccepted
+)
+SELECT id,
+COUNT(*) AS num
+FROM AllIds
+GROUP BY id
+ORDER BY num DESC
+LIMIT 1;
+
 
