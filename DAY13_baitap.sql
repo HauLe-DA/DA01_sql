@@ -182,7 +182,43 @@ GROUP BY m.title
 ORDER BY AVG(mr2.rating) DESC, m.title
 LIMIT 1
 );
-
+-- ANOTHER METHOD:
+WITH
+twt_avg_rating AS -- find the avg rating for each movie
+(SELECT movie_id, AVG(rating) AS avg_rating              
+FROM MovieRating
+WHERE EXTRACT(YEAR FROM created_at)='2020' AND 
+EXTRACT(MONTH FROM created_at)='02'
+GROUP BY movie_id
+),
+twt_result_movie AS-- find the movie name with the highest average rating in February 2020
+(
+SELECT A.title AS results
+FROM Movies A
+JOIN twt_avg_rating B
+ON A.movie_id=B.movie_id
+ORDER BY B.avg_rating DESC, A.title
+LIMIT 1
+),
+users_rate AS-- count the number of movies that each user has rated
+(SELECT user_id, COUNT(movie_id) AS no_rating_movies    
+FROM MovieRating 
+GROUP BY user_id
+),
+twt_result_user AS-- find the name of the user who has rated the greatest number of movies
+(
+SELECT C.name AS results
+FROM Users C
+JOIN users_rate D
+ON C.user_id=D.user_id     
+ORDER BY D.no_rating_movies DESC, C.name
+LIMIT 1)
+  -- union all 
+SELECT results
+FROM  twt_result_user
+UNION ALL
+SELECT results
+FROM  twt_result_movie 
 --EX12: https://leetcode.com/problems/friend-requests-ii-who-has-the-most-friends/?envType=study-plan-v2&envId=top-sql-50
 WITH AllIds AS (
 SELECT requester_id AS id
@@ -197,5 +233,20 @@ FROM AllIds
 GROUP BY id
 ORDER BY num DESC
 LIMIT 1;
-
+-- CÁCH 2:
+WITH twt_RequestAccepted AS(
+SELECT 
+requester_id AS id, COUNT(accepter_id ) AS num
+FROM RequestAccepted  
+GROUP BY requester_id
+UNION ALL
+SELECT 
+accepter_id AS id, COUNT(requester_id)  AS num
+FROM RequestAccepted
+GROUP BY accepter_id)
+SELECT id,SUM(num) AS num
+FROM twt_RequestAccepted
+GROUP BY id
+ORDER BY SUM(num) DESC 
+LIMIT 1
 
