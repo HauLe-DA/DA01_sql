@@ -8,11 +8,24 @@ FROM user_transactions)
 SELECT year,
 product_id,
 curr_year_spend,
-LAG(curr_year_spend) OVER(PARTITION BY product_id) AS prev_year_spend,
-ROUND(((curr_year_spend/LAG(curr_year_spend) OVER(PARTITION BY product_id))-1)*100.0,2) AS yoy_rate
+LAG(curr_year_spend) OVER(PARTITION BY product_id ORDER BY year ) AS prev_year_spend,
+ROUND(((curr_year_spend/LAG(curr_year_spend) OVER(PARTITION BY product_id ORDER BY year))-1)*100.0,2) AS yoy_rate
 FROM curr_year_transactions
 ;
 ex2: datalemur-card-launch-success: https://datalemur.com/questions/card-launch-success 
+SELECT
+a.card_name,
+a.issued_amount
+FROM 
+(SELECT 
+card_name,
+issued_amount,
+issue_year,
+issue_month,
+ROW_NUMBER()OVER(PARTITION BY card_name ORDER BY issue_year,issue_month) AS rank
+FROM monthly_cards_issued) AS a
+WHERE rank=1 
+ORDER BY a.issued_amount DESC ;
 ex3: datalemur-third-transaction: https://datalemur.com/questions/sql-third-transaction 
 ex4: datalemur-histogram-users-purchases: https://datalemur.com/questions/histogram-users-purchases 
 ex5: datalemur-rolling-average-tweets: https://datalemur.com/questions/rolling-average-tweets 
