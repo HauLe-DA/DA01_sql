@@ -27,7 +27,45 @@ FROM monthly_cards_issued) AS a
 WHERE rank=1 
 ORDER BY a.issued_amount DESC ;
 ex3: datalemur-third-transaction: https://datalemur.com/questions/sql-third-transaction 
-ex4: datalemur-histogram-users-purchases: https://datalemur.com/questions/histogram-users-purchases 
+SELECT
+user_id,
+spend,
+transaction_date
+FROM(SELECT 
+user_id,
+spend,
+ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY transaction_date, user_id) AS RANK,
+transaction_date
+FROM transactions) A
+WHERE RANK =3;
+ex4: datalemur-histogram-users-purchases: https://datalemur.com/questions/histogram-users-purchases
+  --cte+ JOIN:
+  WITH recent_transaction 
+AS(SELECT MAX(transaction_date) AS transaction_date,
+user_id
+FROM user_transactions
+GROUP BY user_id 
+ORDER BY transaction_date ASC)
+SELECT A.transaction_date,
+A.user_id,
+COUNT(B.product_id) AS purchase_count
+FROM recent_transaction A 
+LEFT JOIN user_transactions B
+ON A.user_id=B.user_id AND A.transaction_date=B.transaction_date
+GROUP BY A.transaction_date, A.user_id;
+-- WINDOW FUNCTION
+SELECT
+A.transaction_date,
+A.user_id,
+A.purchase_count
+FROM (SELECT 
+user_id,
+transaction_date,
+COUNT(product_id) OVER(PARTITION BY user_id, transaction_date) AS purchase_count,
+ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY transaction_date DESC) AS RANK
+FROM user_transactions) A
+WHERE A.RANK=1
+ORDER BY A.transaction_date ;
 ex5: datalemur-rolling-average-tweets: https://datalemur.com/questions/rolling-average-tweets 
 ex6: datalemur-repeated-payments: https://datalemur.com/questions/repeated-payments 
 ex7: datalemur-highest-grossing: https://datalemur.com/questions/sql-highest-grossing 
