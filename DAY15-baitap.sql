@@ -90,4 +90,24 @@ WHERE prev_timestamp IS NOT NULL
 AND EXTRACT(EPOCH FROM (transaction_timestamp-prev_timestamp))/60<=10
 ; 
 ex7: datalemur-highest-grossing: https://datalemur.com/questions/sql-highest-grossing 
+WITH total_spend 
+AS(
+SELECT category,
+product,
+SUM(spend) AS total_spend
+FROM product_spend
+WHERE EXTRACT(YEAR FROM transaction_date)='2022'
+GROUP BY category, product),
+rank AS(
+SELECT category,
+product,
+RANK() OVER(PARTITION BY category ORDER BY total_spend DESC) AS rank,
+total_spend
+FROM total_spend)
+SELECT category,
+product,
+total_spend
+FROM rank
+WHERE rank<=2
+;
 ex8: datalemur-top-fans-rank: https://datalemur.com/questions/top-fans-rank
