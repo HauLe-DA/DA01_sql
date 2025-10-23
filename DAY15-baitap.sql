@@ -66,7 +66,28 @@ ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY transaction_date DESC) AS RANK
 FROM user_transactions) A
 WHERE A.RANK=1
 ORDER BY A.transaction_date ;
-ex5: datalemur-rolling-average-tweets: https://datalemur.com/questions/rolling-average-tweets 
+ex5: datalemur-rolling-average-tweets: https://datalemur.com/questions/rolling-average-tweets
+SELECT user_id,
+tweet_date,
+ROUND(AVG(tweet_count) OVER(PARTITION BY user_id ORDER BY tweet_date ROWS BETWEEN 2 PRECEDING AND CURRENT ROW),2) AS rolling_avg_3d 
+FROM tweets 
+;
 ex6: datalemur-repeated-payments: https://datalemur.com/questions/repeated-payments 
+WITH LAGGED AS
+(SELECT 
+transaction_id,
+merchant_id,
+credit_card_id,
+amount,
+transaction_timestamp,
+LAG(transaction_timestamp) 
+OVER(PARTITION BY merchant_id, credit_card_id, amount ORDER BY transaction_timestamp) AS prev_timestamp
+FROM transactions)
+SELECT
+COUNT(merchant_id) AS payment_count
+FROM LAGGED
+WHERE prev_timestamp IS NOT NULL
+AND EXTRACT(EPOCH FROM (transaction_timestamp-prev_timestamp))/60<=10
+; 
 ex7: datalemur-highest-grossing: https://datalemur.com/questions/sql-highest-grossing 
 ex8: datalemur-top-fans-rank: https://datalemur.com/questions/top-fans-rank
